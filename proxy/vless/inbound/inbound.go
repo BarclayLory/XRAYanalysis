@@ -515,18 +515,17 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection s
 
 	serverReader := link.Reader // .(*pipe.Reader)
 	serverWriter := link.Writer // .(*pipe.Writer)
-	trafficState := proxy.NewTrafficState(account.ID.Bytes())
+	trafficState := proxy.NewTrafficState(account.ID.Bytes(), account.Flow)
 	postRequest := func() error {
 		defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
 
 		// default: clientReader := reader
-		clientReader := encoding.DecodeBodyAddons(reader, request, requestAddons)
+		clientReader := encoding.DecodeBodyAddons(reader, request, requestAddons, trafficState, ctx)
 
 		var err error
 
 		if requestAddons.Flow == vless.XRV {
 			ctx1 := session.ContextWithInbound(ctx, nil) // TODO enable splice
-			clientReader = proxy.NewVisionReader(clientReader, trafficState, ctx1)
 			err = encoding.XtlsRead(clientReader, serverWriter, timer, connection, input, rawInput, trafficState, ctx1)
 		} else {
 			// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBufer
