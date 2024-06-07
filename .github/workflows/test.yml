@@ -1,44 +1,25 @@
-name: Test
-
+name: Build
 on:
   push:
     branches:
-      - main
-    paths:
-      - "**/*.go"
-      - "go.mod"
-      - "go.sum"
-      - ".github/workflows/*.yml"
+      - master
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - "**/*.go"
-      - "go.mod"
-      - "go.sum"
-      - ".github/workflows/*.yml"
-
 jobs:
-  test:
-    permissions:
-      contents: read
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+  DemoSonarCloudScan:
+    name: SonarCloud
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout codebase
-        uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/checkout@v3
         with:
-          go-version-file: go.mod
-          check-latest: true
-      - name: Restore Cache
-        uses: actions/cache/restore@v4
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          path: resources
-          key: xray-geodat-
-          enableCrossOsArchive: true
-      - name: Test
-        run: go test -timeout 1h -v ./...
+          args: >
+              -Dsonar.organization=barclay
+              -Dsonar.projectkey=barclay_barclay
+              -Dsonar.pyhton.coverage.reportPaths=build.xml
