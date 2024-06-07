@@ -6,7 +6,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
-  sonarcloud:
+  DemoSonarCloudScan:
     name: SonarCloud
     runs-on: ubuntu-latest
     steps:
@@ -18,3 +18,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+              -Dsonar.organization=BarclayLory
+              -Dsonar.projectkey=barclaylory
+              -Dsonar.pyhton.coverage.reportPaths=coverage.xml
